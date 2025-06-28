@@ -1,0 +1,5 @@
+name: TownyPacts
+version: '1.0'
+main: org.breakthebot.townyPacts.TownyPacts
+api-version: '1.21'
+authors: [ Veyronity ]
