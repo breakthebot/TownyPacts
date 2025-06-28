@@ -16,10 +16,15 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven {
+        name = "codemc"
+        url = "https://repo.glaremasters.me/repository/towny/"
+    }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    compileOnly("com.palmergames.bukkit.towny:towny:0.101.1.0")
 }
 
 tasks {
