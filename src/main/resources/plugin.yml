@@ -1,0 +1,15 @@
+name: TownyPacts
+version: '1.0'
+main: org.breakthebot.townyPacts.TownyPacts
+api-version: '1.21'
+authors: [ Jinzo, Veyronity ]
+permissions:
+  towny.command.nation.pact.send:
+    description: Allow a player to offer a pact
+    default: op
+  towny.command.nation.pact.break:
+    description: Allow a player to break a pact
+    default: op
+  towny.command.nation.pact.cancel:
+    description: Allow a player to send a break-pact request
+    default: op
