@@ -8,7 +8,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.breakthebot.townyPacts.pact.pactObject;
+import org.breakthebot.townyPacts.pact.Pact;
 import org.breakthebot.townyPacts.utils.MetaData;
 import com.palmergames.bukkit.towny.exceptions.TownyException;
 
@@ -21,31 +21,35 @@ public class listPact {
             TownyMessaging.sendErrorMsg(sender, "Only players can use this command.");
             return false;
         }
+        TownyAPI API = TownyAPI.getInstance();
 
-        Resident resident = TownyAPI.getInstance().getResident(player.getUniqueId());
+        Resident res = API.getResident(player.getUniqueId());
 
-        if (resident == null || !resident.hasNation()) {
+        if (res == null || !res.hasNation()) {
             TownyMessaging.sendErrorMsg(player, "You are not part of a nation.");
             return false;
         }
-
         Nation nation;
-        try {
-            nation = resident.getNation();
-        } catch (TownyException e) {
-            TownyMessaging.sendErrorMsg(player, "Your nation data could not be retrieved.");
+        if (args.length == 1) {
+            nation = res.getNationOrNull();
+        } else {
+            nation = API.getNation(args[1]);
+        }
+        if (nation == null) {
+            TownyMessaging.sendErrorMsg(player, "Nation not found.");
             return false;
         }
 
-        List<pactObject> pacts = MetaData.getPacts(nation);
+
+        List<Pact> pacts = MetaData.getActivePacts(nation);
 
         if (pacts.isEmpty()) {
-            TownyMessaging.sendMsg(player, "Your nation has no pacts.");
+            TownyMessaging.sendMsg(player, "Nation has no pacts.");
             return true;
         }
 
         TownyMessaging.sendMsg(player, "Pacts for nation " + nation.getName() + ":");
-        for (pactObject pact : pacts) {
+        for (Pact pact : pacts) {
             String targetNation = pact.getTargetNation(nation.getName());
             String durationStr = pact.getDuration() == -1 ? "Forever" : pact.getDuration() + " days";
             String status = (pact.getAcceptedBy() == null) ? "Pending" : "Accepted";

@@ -4,16 +4,14 @@ import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
-import com.palmergames.bukkit.towny.exceptions.TownyException;
+import org.breakthebot.townyPacts.pact.Pact;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.breakthebot.townyPacts.pact.pactObject;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.UUID;
 
 public class acceptPact {
 
@@ -28,38 +26,34 @@ public class acceptPact {
             return false;
         }
 
+        if (!player.hasPermission("towny.command.nation.pact.accept")) {
+            TownyMessaging.sendErrorMsg(player, "You do not have permission to perform this command.");
+            return false;
+        }
+
         String targetNationName = args[1];
         TownyAPI towny = TownyAPI.getInstance();
 
         Resident resident = towny.getResident(player.getUniqueId());
         if (resident == null || !resident.hasNation()) {
-            TownyMessaging.sendErrorMsg(player, "You are not part of a nation.");
+            TownyMessaging.sendErrorMsg(player, "You must be part of a nation.");
             return false;
         }
 
         Nation selfNation;
-        try {
-            selfNation = resident.getNation();
-        } catch (TownyException e) {
-            TownyMessaging.sendErrorMsg(player, "Could not retrieve your nation.");
-            return false;
-        }
-
-        if (!selfNation.getKing().equals(resident)) {
-            TownyMessaging.sendErrorMsg(player, "Only the nation leader can accept pacts.");
-            return false;
-        }
+        selfNation = resident.getNationOrNull();
+        assert selfNation != null;
 
         Nation targetNation = towny.getNation(targetNationName);
         if (targetNation == null) {
-            TownyMessaging.sendErrorMsg(player, "Target nation '" + targetNationName + "' does not exist.");
+            TownyMessaging.sendErrorMsg(player, "Nation '" + targetNationName + "' not found exist.");
             return false;
         }
 
-        List<pactObject> targetPacts = MetaData.getPacts(targetNation);
-        pactObject found = null;
+        List<Pact> pendingPacts = MetaData.getPendingPacts(targetNation);
+        Pact found = null;
 
-        for (pactObject pact : targetPacts) {
+        for (Pact pact : pendingPacts) {
             if (pact.getTargetNation(targetNation.getName()).equalsIgnoreCase(selfNation.getName())
                     && pact.getAcceptedBy() == null) {
                 found = pact;
@@ -68,16 +62,17 @@ public class acceptPact {
         }
 
         if (found == null) {
-            TownyMessaging.sendErrorMsg(player, "No pending pact request from " + targetNationName + " to accept.");
+            TownyMessaging.sendErrorMsg(player, "No pending pacts from " + targetNationName);
             return false;
         }
 
         found.setAcceptedBy(player.getUniqueId());
 
-        MetaData.addOrUpdatePact(selfNation, found);
-        MetaData.addOrUpdatePact(targetNation, found);
+        MetaData.removePendingPact(selfNation, targetNation);
+        MetaData.updateActivePact(selfNation, found);
+        MetaData.updateActivePact(targetNation, found);
 
-        TownyMessaging.sendMsg(player, "You have accepted the pact with " + targetNationName + ".");
+        TownyMessaging.sendMsg(player, "You have accepted the pact with " + targetNationName + "!");
         return true;
     }
 }

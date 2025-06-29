@@ -4,14 +4,25 @@ import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
-import org.breakthebot.townyPacts.pact.pactObject;
+import com.palmergames.bukkit.towny.object.Town;
+import org.breakthebot.townyPacts.pact.Pact;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class sendPact {
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class sendPact implements Listener {
+
+    private static final Map<UUID, String> leaderMessageQueue = new HashMap<>();
+
 
     public static boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull[] args) {
         if (!(sender instanceof Player player)) {
@@ -23,27 +34,25 @@ public class sendPact {
             TownyMessaging.sendErrorMsg(player, "Usage: /n pact send <nation> <duration>");
             return false;
         }
+        if (!player.hasPermission("towny.command.nation.pact.send")) {
+            TownyMessaging.sendErrorMsg(player, "You do not have permission to perform this command.");
+            return false;
+        }
 
         String targetNationName = args[1];
         String durationStr = args[2];
 
         try {
-            TownyAPI towny = TownyAPI.getInstance();
-            Resident senderResident = towny.getResident(player.getUniqueId());
+            TownyAPI API = TownyAPI.getInstance();
+            Resident senderResident = API.getResident(player.getUniqueId());
 
             if (senderResident == null || !senderResident.hasNation()) {
-                TownyMessaging.sendErrorMsg(player, "You are not part of a nation.");
+                TownyMessaging.sendErrorMsg(player, "You must be part of a nation.");
                 return false;
             }
 
             Nation senderNation = senderResident.getNation();
-
-            if (!senderNation.getKing().equals(senderResident)) {
-                TownyMessaging.sendErrorMsg(player, "You must be the leader of your nation to send a pact.");
-                return false;
-            }
-
-            Nation targetNation = towny.getNation(targetNationName);
+            Nation targetNation = API.getNation(targetNationName);
 
             if (targetNation == null) {
                 TownyMessaging.sendErrorMsg(player, "Nation '" + targetNationName + "' does not exist.");
@@ -55,7 +64,7 @@ public class sendPact {
                 return false;
             }
 
-            if (MetaData.hasPact(senderNation, targetNation)) {
+            if (MetaData.hasActivePact(senderNation, targetNation)) {
                 TownyMessaging.sendErrorMsg(player, "A pact with " + targetNationName + " already exists.");
                 return false;
             }
@@ -71,7 +80,7 @@ public class sendPact {
                 return false;
             }
 
-            pactObject newPact = new pactObject(
+            Pact newPact = new Pact(
                     "Pact-" + senderNation.getName() + "-" + targetNation.getName(),
                     senderNation.getName(),
                     targetNation.getName(),
@@ -80,19 +89,15 @@ public class sendPact {
                     null
             );
 
-            MetaData.addOrUpdatePact(senderNation, newPact);
+            MetaData.updatePendingPact(senderNation, newPact);
 
             TownyMessaging.sendMsg(player, "Pact sent to nation " + targetNationName + " for duration " + durationStr + ".");
 
-            Resident targetLeader = targetNation.getKing();
-            Player targetPlayer = targetLeader.getPlayer();
 
-            if (targetPlayer != null && targetPlayer.isOnline()) {
-                TownyMessaging.sendMsg(targetPlayer,
-                        "You have received a pact request from nation " + senderNation.getName() + ".\n" +
-                                "Use '/n pact accept " + senderNation.getName() + "' to accept it."
-                );
-            }
+
+
+            String message = "You have received a pact request from nation " + senderNation.getName() + ".\n" + "Use /n pact accept " + senderNation.getName() + " to accept it.";
+            leaderMessageQueue.put(targetNation.getUUID(), message);
 
             return true;
 
@@ -100,6 +105,27 @@ public class sendPact {
             TownyMessaging.sendErrorMsg(player, "Towny data not found. Try again later.");
             return false;
         }
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if (!player.hasPermission("towny.command.nation.pact.accept")) { return; }
+
+        Resident res = TownyAPI.getInstance().getResident(player);
+        assert res != null;
+        if (!res.hasNation()) {
+            return;
+        }
+        Nation nation = res.getNationOrNull();
+        assert nation != null;
+        UUID uuid = nation.getUUID();
+        if (!leaderMessageQueue.containsKey(uuid)) {
+            return;
+        }
+
+        String message = leaderMessageQueue.remove(uuid);
+        TownyMessaging.sendMsg(player, message);
     }
 
     private static int parseDurationToDays(String duration) {

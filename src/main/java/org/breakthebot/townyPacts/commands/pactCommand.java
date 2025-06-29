@@ -13,15 +13,14 @@ import org.jetbrains.annotations.Nullable;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.Nation;
 
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import java.util.List;
 
-public class pactRegister implements CommandExecutor, TabCompleter {
+public class pactCommand implements CommandExecutor, TabCompleter {
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         if (!(sender instanceof Player player)) {
             TownyMessaging.sendErrorMsg(sender, "Only players may use this command.");
             return false;
