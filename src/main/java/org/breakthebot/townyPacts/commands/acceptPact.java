@@ -2,16 +2,20 @@ package org.breakthebot.townyPacts.commands;
 
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
-import com.palmergames.bukkit.towny.exceptions.TownyException;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
+import com.palmergames.bukkit.towny.exceptions.TownyException;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.breakthebot.townyPacts.pact.pactObject;
 import org.breakthebot.townyPacts.utils.MetaData;
+import org.jetbrains.annotations.NotNull;
 
-public class breakPact {
+import java.util.List;
+import java.util.UUID;
+
+public class acceptPact {
 
     public static boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull[] args) {
         if (!(sender instanceof Player player)) {
@@ -20,7 +24,7 @@ public class breakPact {
         }
 
         if (args.length != 2) {
-            TownyMessaging.sendErrorMsg(player, "Usage: /n pact break <nation>");
+            TownyMessaging.sendErrorMsg(player, "Usage: /n pact accept <nation>");
             return false;
         }
 
@@ -42,7 +46,7 @@ public class breakPact {
         }
 
         if (!selfNation.getKing().equals(resident)) {
-            TownyMessaging.sendErrorMsg(player, "Only the nation leader can break pacts.");
+            TownyMessaging.sendErrorMsg(player, "Only the nation leader can accept pacts.");
             return false;
         }
 
@@ -52,16 +56,28 @@ public class breakPact {
             return false;
         }
 
-        boolean hadPact = MetaData.hasPact(selfNation, targetNation);
-        if (!hadPact) {
-            TownyMessaging.sendErrorMsg(player, "No existing pact with " + targetNationName + " to break.");
+        List<pactObject> targetPacts = MetaData.getPacts(targetNation);
+        pactObject found = null;
+
+        for (pactObject pact : targetPacts) {
+            if (pact.getTargetNation(targetNation.getName()).equalsIgnoreCase(selfNation.getName())
+                    && pact.getAcceptedBy() == null) {
+                found = pact;
+                break;
+            }
+        }
+
+        if (found == null) {
+            TownyMessaging.sendErrorMsg(player, "No pending pact request from " + targetNationName + " to accept.");
             return false;
         }
 
-        MetaData.removePact(selfNation, targetNation);
-        MetaData.removePact(targetNation, selfNation);
+        found.setAcceptedBy(player.getUniqueId());
 
-        TownyMessaging.sendMsg(player, "Pact with " + targetNationName + " has been broken on your side.");
+        MetaData.addOrUpdatePact(selfNation, found);
+        MetaData.addOrUpdatePact(targetNation, found);
+
+        TownyMessaging.sendMsg(player, "You have accepted the pact with " + targetNationName + ".");
         return true;
     }
 }

@@ -10,3 +10,6 @@ public class cancelPact {
         return false;
     }
 }
+
+// Usage: /n pact break <nation>
+// This will break the pact with a specified nation. (broken from 1 side, not both)
