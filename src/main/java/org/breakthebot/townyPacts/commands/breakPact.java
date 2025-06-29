@@ -52,14 +52,14 @@ public class breakPact {
             return false;
         }
 
-        boolean hadPact = MetaData.hasPact(selfNation, targetNation);
+        boolean hadPact = MetaData.hasActivePact(selfNation, targetNation);
         if (!hadPact) {
             TownyMessaging.sendErrorMsg(player, "No existing pact with " + targetNationName + " to break.");
             return false;
         }
 
-        MetaData.removePact(selfNation, targetNation);
-        MetaData.removePact(targetNation, selfNation);
+        MetaData.removeActivePact(selfNation, targetNation);
+        MetaData.removeActivePact(targetNation, selfNation);
 
         TownyMessaging.sendMsg(player, "Pact with " + targetNationName + " has been broken on your side.");
         return true;
