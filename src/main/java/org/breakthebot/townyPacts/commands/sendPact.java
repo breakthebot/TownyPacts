@@ -19,9 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class sendPact implements Listener {
+import static org.breakthebot.townyPacts.commands.pactCommand.leaderMessageQueue;
 
-    private static final Map<UUID, String> leaderMessageQueue = new HashMap<>();
+public class sendPact implements Listener {
 
 
     public static boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull[] args) {
@@ -93,11 +93,15 @@ public class sendPact implements Listener {
 
             TownyMessaging.sendMsg(player, "Pact sent to nation " + targetNationName + " for duration " + durationStr + ".");
 
-
-
-
             String message = "You have received a pact request from nation " + senderNation.getName() + ".\n" + "Use /n pact accept " + senderNation.getName() + " to accept it.";
             leaderMessageQueue.put(targetNation.getUUID(), message);
+
+            Resident targetLeader = targetNation.getKing();
+            Player targetPlayer = targetLeader.getPlayer();
+
+            if (targetPlayer != null && targetPlayer.isOnline()) {
+                TownyMessaging.sendMsg(targetPlayer, message);
+            }
 
             return true;
 

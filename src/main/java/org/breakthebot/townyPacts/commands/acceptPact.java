@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+import static org.breakthebot.townyPacts.commands.pactCommand.leaderMessageQueue;
+
 public class acceptPact {
 
     public static boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull[] args) {
@@ -73,6 +75,16 @@ public class acceptPact {
         MetaData.updateActivePact(targetNation, found);
 
         TownyMessaging.sendMsg(player, "You have accepted the pact with " + targetNationName + "!");
+
+        String message = "The pact with " + targetNation.getName() + " has been accepted.";
+        leaderMessageQueue.put(targetNation.getUUID(), message);
+
+        Resident targetLeader = targetNation.getKing();
+        Player targetPlayer = targetLeader.getPlayer();
+
+        if (targetPlayer != null && targetPlayer.isOnline()) {
+            TownyMessaging.sendMsg(targetPlayer, message);
+        }
         return true;
     }
 }

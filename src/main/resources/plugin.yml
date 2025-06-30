@@ -9,13 +9,16 @@ permissions:
     default: true
   towny.command.nation.pact.send:
     description: Allow a player to offer a pact
-    default: op
+    default: true
   towny.command.nation.pact.accept:
     description: Allow a player to accept a pact
-    default: op
+    default: true
   towny.command.nation.pact.break:
     description: Allow a player to force-break a pact
-    default: op
+    default: true
   towny.command.nation.pact.cancel:
     description: Allow a player to send a request to break a pact
-    default: op
+    default: true
+  towny.command.nation.pact.deny:
+    description: Allow a player to deny a pact
+    default: true

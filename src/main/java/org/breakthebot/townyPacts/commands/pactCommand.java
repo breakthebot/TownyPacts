@@ -12,12 +12,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.Nation;
+import org.breakthebot.townyPacts.utils.MetaData;
+import org.breakthebot.townyPacts.pact.Pact;
 
+
+import java.util.*;
 import java.util.stream.Collectors;
 
-import java.util.List;
-
 public class pactCommand implements CommandExecutor, TabCompleter {
+
+    public static final Map<UUID, String> leaderMessageQueue = new HashMap<>();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
@@ -37,8 +41,9 @@ public class pactCommand implements CommandExecutor, TabCompleter {
             case "break" -> breakPact.onCommand(sender, command, label, args);
             case "cancel" -> cancelPact.onCommand(sender, command, label, args);
             case "accept" -> acceptPact.onCommand(sender, command, label, args);
+            case "deny" -> denyPact.onCommand(sender, command, label, args);
             default -> {
-                TownyMessaging.sendErrorMsg(player, "Invalid argument. Choose: send, list, break, accept or cancel.");
+                TownyMessaging.sendErrorMsg(player, "Invalid argument. Choose: send, list, break, accept, deny or cancel.");
                 yield false;
             }
         };
@@ -52,13 +57,17 @@ public class pactCommand implements CommandExecutor, TabCompleter {
             @NotNull String[] args
     ) {
         if (args.length == 1) {
-            return List.of("send", "list", "break", "cancel", "accept");
+            return List.of("send", "list", "break", "cancel", "accept", "deny");
         }
 
         if (!(sender instanceof Player player)) return List.of();
 
-        if (args.length == 2 && (args[0].equalsIgnoreCase("send") || args[0].equalsIgnoreCase("break") || args[0].equalsIgnoreCase("cancel") || args[0].equalsIgnoreCase("accept"))) {
+        if (args.length == 2 && (args[0].equalsIgnoreCase("send") || args[0].equalsIgnoreCase("break") || args[0].equalsIgnoreCase("cancel"))) {
             return getOtherNationNames(player);
+        }
+
+        if (args.length == 2 && (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("deny"))) {
+            return getPendingPactNationNames(player);
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("list")) {
@@ -68,7 +77,7 @@ public class pactCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 3 && args[0].equalsIgnoreCase("send")) {
-            return List.of("1d", "7d", "3w", "2m", "1y", "forever");
+            return List.of("1d", "2w", "3m", "1y", "forever");
         }
 
         return List.of();
@@ -91,6 +100,32 @@ public class pactCommand implements CommandExecutor, TabCompleter {
         return api.getNations().stream()
                 .filter(nation -> !nation.equals(finalOwnNation))
                 .map(Nation::getName)
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getPendingPactNationNames(Player player) {
+        var api = TownyAPI.getInstance();
+        Resident resident = api.getResident(player.getUniqueId());
+        if (resident == null || !resident.hasNation()) return List.of();
+
+        Nation ownNation;
+        try {
+            ownNation = resident.getNation();
+        } catch (TownyException e) {
+            return List.of();
+        }
+
+        String ownNationName = ownNation.getName();
+
+        List<Pact> pendingPacts = MetaData.getPendingPacts(ownNation);
+
+        return pendingPacts.stream()
+                .map(p -> {
+                    String target = p.getTargetNation(ownNationName);
+                    return target != null ? target : null;
+                })
+                .filter(Objects::nonNull)
+                .distinct()
                 .collect(Collectors.toList());
     }
 }
