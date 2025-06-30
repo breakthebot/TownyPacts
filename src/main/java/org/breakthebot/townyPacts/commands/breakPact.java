@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.breakthebot.townyPacts.utils.MetaData;
 
+import static org.breakthebot.townyPacts.commands.pactCommand.leaderMessageQueue;
+
 public class breakPact {
 
     public static boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull[] args) {
@@ -62,6 +64,16 @@ public class breakPact {
         MetaData.removeActivePact(targetNation, selfNation);
 
         TownyMessaging.sendMsg(player, "Pact with " + targetNationName + " has been broken on your side.");
+
+        String message = "The pact with " + targetNation.getName() + " has been broken.";
+        leaderMessageQueue.put(targetNation.getUUID(), message);
+
+        Resident targetLeader = targetNation.getKing();
+        Player targetPlayer = targetLeader.getPlayer();
+
+        if (targetPlayer != null && targetPlayer.isOnline()) {
+            TownyMessaging.sendMsg(targetPlayer, message);
+        }
         return true;
     }
 }
