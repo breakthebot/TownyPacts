@@ -8,11 +8,13 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.breakthebot.townyPacts.pact.Pact;
+import org.breakthebot.townyPacts.object.Pact;
 import org.breakthebot.townyPacts.utils.MetaData;
-import com.palmergames.bukkit.towny.exceptions.TownyException;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class listPact {
 
@@ -21,14 +23,17 @@ public class listPact {
             TownyMessaging.sendErrorMsg(sender, "Only players can use this command.");
             return false;
         }
+
+        if (!player.hasPermission("towny.command.nation.pact.list")) {
+            TownyMessaging.sendErrorMsg(player, "You do not have permission to deny pacts.");
+            return false;
+        }
+
         TownyAPI API = TownyAPI.getInstance();
 
         Resident res = API.getResident(player.getUniqueId());
+        assert res != null;
 
-        if (res == null || !res.hasNation()) {
-            TownyMessaging.sendErrorMsg(player, "You are not part of a nation.");
-            return false;
-        }
         Nation nation;
         if (args.length == 1) {
             nation = res.getNationOrNull();
@@ -44,18 +49,45 @@ public class listPact {
         List<Pact> pacts = MetaData.getActivePacts(nation);
 
         if (pacts.isEmpty()) {
-            TownyMessaging.sendMsg(player, "Nation has no pacts.");
+            TownyMessaging.sendMsg(player, "Nation " + nation.getName() + " has no pacts.");
             return true;
         }
 
-        TownyMessaging.sendMsg(player, "Pacts for nation " + nation.getName() + ":");
+//        TownyMessaging.sendMsg(player, "Pacts for nation " + nation.getName() + ":");
+//        for (Pact pact : pacts) {
+//            String targetNation = pact.getTargetNation(nation.getName());
+//            String durationStr = pact.getDuration() == -1 ? "Forever" : pact.getDuration() + " days";
+//            String status = pact.getStatus();
+//
+//            TownyMessaging.sendMsg(player, "- Pact with " + targetNation + " | Duration: " + durationStr + " | Status: " + status);
+//        }
+        List<Pact> active = new ArrayList<>(), pending = new ArrayList<>(), broken = new ArrayList<>();
         for (Pact pact : pacts) {
-            String targetNation = pact.getTargetNation(nation.getName());
-            String durationStr = pact.getDuration() == -1 ? "Forever" : pact.getDuration() + " days";
-            String status = (pact.getAcceptedBy() == null) ? "Pending" : "Accepted";
-
-            TownyMessaging.sendMsg(player, "- Pact with " + targetNation + " | Duration: " + durationStr + " | Status: " + status);
+            switch (pact.getStatus().toUpperCase()) {
+                case "ACTIVE" -> active.add(pact);
+                case "PENDING" -> pending.add(pact);
+                case "BROKEN" -> broken.add(pact);
+            }
         }
+
+        Comparator<Pact> byExpiry = Comparator.comparingLong(p -> p.getExpiresAt() == -1 ? Long.MAX_VALUE : p.getExpiresAt());
+        List<List<Pact>> categories = List.of(active, pending, broken);
+        String[] headers = {"&2Active Pacts:", "&ePending Pacts:", "&cBroken Pacts:"};
+
+        for (int i = 0; i < 3; i++) {
+            List<Pact> list = categories.get(i);
+            list.sort(byExpiry.reversed());
+            if (!list.isEmpty()) TownyMessaging.sendMsg(player, headers[i]);
+
+            for (Pact pact : list) {
+                String target = pact.getTargetNation(nation.getName());
+                long exp = pact.getExpiresAt();
+                String time = (exp == -1) ? "Forever" : TimeUnit.MILLISECONDS.toDays(exp - System.currentTimeMillis()) + "d "
+                        + TimeUnit.MILLISECONDS.toHours(exp - System.currentTimeMillis()) % 24 + "h";
+                TownyMessaging.sendMsg(player, "&b- Pact with " + target + " | &7Expires in: " + time);
+            }
+        }
+
 
         return true;
     }

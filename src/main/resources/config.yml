@@ -7,4 +7,4 @@ weekly-price: 7
 # Price to break a pact
 break-price: 0
 
-break-cooldown-hours: 6
+break-cooldown-days: 3

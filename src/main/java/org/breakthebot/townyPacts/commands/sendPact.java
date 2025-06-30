@@ -4,8 +4,7 @@ import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
-import com.palmergames.bukkit.towny.object.Town;
-import org.breakthebot.townyPacts.pact.Pact;
+import org.breakthebot.townyPacts.object.Pact;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -15,8 +14,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.breakthebot.townyPacts.commands.pactCommand.leaderMessageQueue;
@@ -30,14 +29,16 @@ public class sendPact implements Listener {
             return false;
         }
 
+        if (!(player.hasPermission("towny.command.nation.pact.manage") || player.hasPermission("towny.command.nation.pact.send"))) {
+            TownyMessaging.sendErrorMsg(player, "You do not have permission to perform this command.");
+            return false;
+        }
+
         if (args.length != 3) {
             TownyMessaging.sendErrorMsg(player, "Usage: /n pact send <nation> <duration>");
             return false;
         }
-        if (!player.hasPermission("towny.command.nation.pact.send")) {
-            TownyMessaging.sendErrorMsg(player, "You do not have permission to perform this command.");
-            return false;
-        }
+
 
         String targetNationName = args[1];
         String durationStr = args[2];
@@ -68,6 +69,10 @@ public class sendPact implements Listener {
                 TownyMessaging.sendErrorMsg(player, "A pact with " + targetNationName + " already exists.");
                 return false;
             }
+            if (MetaData.hasPendingPact(senderNation, targetNation)) {
+                TownyMessaging.sendErrorMsg(player, "A pending pact with " + targetNationName + "is awaiting your response. \nUse /n pact accept|deny before sending a pact request.");
+                return false;
+            }
 
             if (senderNation.hasEnemy(targetNation)) {
                 TownyMessaging.sendErrorMsg(player, "You cannot send a pact to a nation marked as an enemy.");
@@ -76,7 +81,7 @@ public class sendPact implements Listener {
 
             int durationDays = parseDurationToDays(durationStr);
             if (durationDays == Integer.MIN_VALUE) {
-                TownyMessaging.sendErrorMsg(player, "Invalid duration. Use formats like 1d, 2w, or 'forever'.");
+                TownyMessaging.sendErrorMsg(player, "Invalid duration. Use formats like 1d, 3, or 'forever'.");
                 return false;
             }
 
@@ -90,19 +95,30 @@ public class sendPact implements Listener {
             );
 
             MetaData.updatePendingPact(senderNation, newPact);
+            MetaData.updatePendingPact(targetNation, newPact);
 
             TownyMessaging.sendMsg(player, "Pact sent to nation " + targetNationName + " for duration " + durationStr + ".");
 
-            String message = "You have received a pact request from nation " + senderNation.getName() + ".\n" + "Use /n pact accept " + senderNation.getName() + " to accept it.";
-            leaderMessageQueue.put(targetNation.getUUID(), message);
+            String message = "You have received a pact request from nation " + senderNation.getName() + " for duration " + durationStr + ".\n" + "Use /n pact accept|deny";
 
-            Resident targetLeader = targetNation.getKing();
-            Player targetPlayer = targetLeader.getPlayer();
-
-            if (targetPlayer != null && targetPlayer.isOnline()) {
-                TownyMessaging.sendMsg(targetPlayer, message);
+            ArrayList<Resident> authorised = new ArrayList<>();
+            List<Resident> reslist = targetNation.getResidents();
+            Player tempplayer;
+            for (Resident res : reslist) {
+                tempplayer = res.getPlayer();
+                assert tempplayer != null;
+                if (tempplayer.isOnline() && (player.hasPermission("towny.command.nation.pact.manage") || player.hasPermission("towny.command.nation.pact.accept") || player.hasPermission("towny.command.nation.pact.deny"))) {
+                    authorised.add(res);
+                }
+            }
+            if (!authorised.isEmpty()) {
+                for (Resident res : authorised) {
+                    TownyMessaging.sendMsg(res.getPlayer(), message);
+                }
+                return true;
             }
 
+            leaderMessageQueue.put(targetNation.getUUID(), message);
             return true;
 
         } catch (Exception e) {
@@ -114,7 +130,7 @@ public class sendPact implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (!player.hasPermission("towny.command.nation.pact.accept")) { return; }
+        if (!(player.hasPermission("towny.command.nation.pact.manage") || player.hasPermission("towny.command.nation.pact.accept"))) { return; }
 
         Resident res = TownyAPI.getInstance().getResident(player);
         assert res != null;
@@ -129,6 +145,7 @@ public class sendPact implements Listener {
         }
 
         String message = leaderMessageQueue.remove(uuid);
+        if (message == null) { return; }
         TownyMessaging.sendMsg(player, message);
     }
 
@@ -147,4 +164,6 @@ public class sendPact implements Listener {
             default -> Integer.MIN_VALUE;
         };
     }
+
+
 }
