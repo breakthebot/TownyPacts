@@ -37,6 +37,10 @@ public class Pact {
 
     public String getName() { return name; }
 
+    public void setName(String newName) {
+        this.name = newName;
+    }
+
     public String getNation1() { return nation1; }
 
     public String getNation2() { return nation2; }

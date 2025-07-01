@@ -31,7 +31,7 @@ public class pactCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            TownyMessaging.sendErrorMsg(sender, "Usage: /n pact <send|list|break|accept|deny>");
+            TownyMessaging.sendErrorMsg(sender, "Usage: /n pact <send|list|break|accept|deny|info>");
             return false;
         }
 
@@ -51,8 +51,14 @@ public class pactCommand implements CommandExecutor, TabCompleter {
             case "deny" -> {
                 return denyPact.onCommand(sender, command, label, args);
             }
+            case "info" -> {
+                return infoPact.onCommand(sender, command, label, args);
+            }
+            case "revoke" -> {
+                return revokePact.onCommand(sender, command, label, args);
+            }
             default -> {
-                TownyMessaging.sendErrorMsg(player, "Usage: /n pact <send|list|break|accept|deny>");
+                TownyMessaging.sendErrorMsg(player, "Usage: /n pact <send|list|break|accept|deny|info|revoke>");
                 return false;
             }
         }
@@ -66,7 +72,7 @@ public class pactCommand implements CommandExecutor, TabCompleter {
             @NotNull String[] args
     ) {
         if (args.length == 1) {
-            return List.of("send", "list", "break", "accept", "deny");
+            return List.of("send", "list", "break", "accept", "deny", "info", "revoke");
         }
 
         if (!(sender instanceof Player player)) return List.of();
@@ -75,7 +81,7 @@ public class pactCommand implements CommandExecutor, TabCompleter {
             return getOtherNationNames(player);
         }
 
-        if (args.length == 2 && (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("deny"))) {
+        if (args.length == 2 && (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("deny") || args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("revoke"))) {
             return getPendingPactNationNames(player);
         }
 
