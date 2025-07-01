@@ -5,11 +5,16 @@ import org.bukkit.configuration.file.FileConfiguration;
 public class config {
 
 
+    public final int baseCreationPrice;
+    public final int breakPrice;
     public final int breakCooldownDays;
+
 
     public config(TownyPacts plugin) {
         FileConfiguration cfg = plugin.getConfig();
 
-        this.breakCooldownDays = cfg.getInt("break-cooldown-days", 3);
+        this.baseCreationPrice = cfg.getInt("baseCreationPrice", 0);
+        this.breakPrice = cfg.getInt("breakPrice", 0);
+        this.breakCooldownDays = cfg.getInt("breakCooldownDays", 3);
     }
 }

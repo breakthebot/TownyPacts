@@ -4,6 +4,8 @@ import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
+import org.breakthebot.townyPacts.TownyPacts;
+import org.breakthebot.townyPacts.config;
 import org.breakthebot.townyPacts.object.Pact;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.command.Command;
@@ -59,6 +61,7 @@ public class sendPact implements Listener {
                 TownyMessaging.sendErrorMsg(player, "Nation '" + targetNationName + "' does not exist.");
                 return false;
             }
+            targetNationName = targetNation.getName(); // Fix capitalisation
 
             if (targetNation.equals(senderNation)) {
                 TownyMessaging.sendErrorMsg(player, "You cannot send a pact to your own nation.");
@@ -70,7 +73,7 @@ public class sendPact implements Listener {
                 return false;
             }
             if (MetaData.hasPendingPact(senderNation, targetNation)) {
-                TownyMessaging.sendErrorMsg(player, "A pending pact with " + targetNationName + "is awaiting your response. \nUse /n pact accept|deny before sending a pact request.");
+                TownyMessaging.sendErrorMsg(player, "A pending pact with " + targetNationName + " already exists.");
                 return false;
             }
 
@@ -83,6 +86,18 @@ public class sendPact implements Listener {
             if (durationDays == Integer.MIN_VALUE) {
                 TownyMessaging.sendErrorMsg(player, "Invalid duration. Use formats like 1d, 3, or 'forever'.");
                 return false;
+            }
+
+            config settings = TownyPacts.getInstance().getConfiguration();
+            int cost = settings.baseCreationPrice;
+            if (cost != 0) {
+                cost = (cost + 1) / 2;
+
+                if (senderNation.getAccount().getHoldingBalance() < cost) {
+                    TownyMessaging.sendErrorMsg(player, "Your nation does not have enough to send pacts. Needed: " + cost);
+                    return false;
+                }
+                senderNation.getAccount().withdraw(cost, "Sending a pact to " + targetNationName);
             }
 
             Pact newPact = new Pact(
