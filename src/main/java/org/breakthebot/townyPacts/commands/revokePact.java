@@ -5,6 +5,7 @@ import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import org.breakthebot.townyPacts.object.Pact;
+import org.breakthebot.townyPacts.utils.EventHelper;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -58,8 +59,12 @@ public class revokePact {
         MetaData.removePendingPact(selfNation, targetNation);
         MetaData.removePendingPact(targetNation, selfNation);
 
+        String message = "Nation " + selfNation.getName() + " has revoked their pact request to your nation.";
+
         TownyMessaging.sendPrefixedNationMessage(selfNation, "You have revoked the pact request to nation " + sentToNationName + ".");
-        TownyMessaging.sendPrefixedNationMessage(targetNation, "The nation of " + selfNation.getName() + " has revoked their Pact request.");
+        TownyMessaging.sendPrefixedNationMessage(targetNation, message);
+
+        EventHelper.addLeaderMessage(targetNation, message);
 
         return true;
     }

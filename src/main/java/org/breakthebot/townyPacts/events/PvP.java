@@ -29,14 +29,20 @@ public class PvP implements Listener {
         }
 
         if (attacker == null) return;
+
         TownyAPI API = TownyAPI.getInstance();
         Nation nat1 = API.getNation(victim);
         Nation nat2 = API.getNation(attacker);
-        if (nat1 == null || nat2 == null) { return; }
+
+        if (nat1 == null || nat2 == null) return;
+
+        if (API.isPVP(victim.getLocation())) {
+            return;
+        }
 
         if (MetaData.hasActivePact(nat1, nat2)) {
             event.setCancelled(true);
-            TownyMessaging.sendErrorMsg(attacker, "You may not attack this player as your nations have an active pact");
+            TownyMessaging.sendErrorMsg(attacker, "You may not attack this player as your nations have an active pact.");
         }
     }
 }

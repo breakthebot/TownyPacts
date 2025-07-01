@@ -135,10 +135,7 @@ public class pactCommand implements CommandExecutor, TabCompleter {
         List<Pact> pendingPacts = MetaData.getPendingPacts(ownNation);
 
         return pendingPacts.stream()
-                .map(p -> {
-                    String target = p.getTargetNation(ownNationName);
-                    return target != null ? target : null;
-                })
+                .map(p -> p.getTargetNation(ownNationName))
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());

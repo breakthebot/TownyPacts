@@ -7,6 +7,7 @@ import com.palmergames.bukkit.towny.object.Resident;
 import org.breakthebot.townyPacts.TownyPacts;
 import org.breakthebot.townyPacts.config;
 import org.breakthebot.townyPacts.object.Pact;
+import org.breakthebot.townyPacts.utils.EventHelper;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -114,54 +115,15 @@ public class sendPact implements Listener {
 
             TownyMessaging.sendMsg(player, "Pact sent to nation " + targetNationName + " for duration " + durationStr + ".");
 
-            String message = "You have received a pact request from nation " + senderNation.getName() + " for duration " + durationStr + ".\n" + "Use /n pact accept|deny";
+            String message = "You have received a pact request from nation " + senderNation.getName() + " for duration " + durationStr + ".\n" + "Use \"/n pact accept|deny " + senderNation.getName() + "\"";
 
-            ArrayList<Resident> authorised = new ArrayList<>();
-            List<Resident> reslist = targetNation.getResidents();
-            Player tempplayer;
-            for (Resident res : reslist) {
-                tempplayer = res.getPlayer();
-                assert tempplayer != null;
-                if (tempplayer.isOnline() && (player.hasPermission("towny.command.nation.pact.manage") || player.hasPermission("towny.command.nation.pact.accept") || player.hasPermission("towny.command.nation.pact.deny"))) {
-                    authorised.add(res);
-                }
-            }
-            if (!authorised.isEmpty()) {
-                for (Resident res : authorised) {
-                    TownyMessaging.sendMsg(res.getPlayer(), message);
-                }
-                return true;
-            }
-
-            leaderMessageQueue.put(targetNation.getUUID(), message);
+            EventHelper.addLeaderMessage(targetNation, message);
             return true;
 
         } catch (Exception e) {
             TownyMessaging.sendErrorMsg(player, "Towny data not found. Try again later.");
             return false;
         }
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        if (!(player.hasPermission("towny.command.nation.pact.manage") || player.hasPermission("towny.command.nation.pact.accept"))) { return; }
-
-        Resident res = TownyAPI.getInstance().getResident(player);
-        assert res != null;
-        if (!res.hasNation()) {
-            return;
-        }
-        Nation nation = res.getNationOrNull();
-        assert nation != null;
-        UUID uuid = nation.getUUID();
-        if (!leaderMessageQueue.containsKey(uuid)) {
-            return;
-        }
-
-        String message = leaderMessageQueue.remove(uuid);
-        if (message == null) { return; }
-        TownyMessaging.sendMsg(player, message);
     }
 
     private static int parseDurationToDays(String duration) {

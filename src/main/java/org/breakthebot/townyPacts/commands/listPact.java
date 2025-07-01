@@ -47,6 +47,7 @@ public class listPact {
 
 
         List<Pact> pacts = MetaData.getActivePacts(nation);
+        pacts.addAll(MetaData.getPendingPacts(nation));
 
         if (pacts.isEmpty()) {
             TownyMessaging.sendMsg(player, "Nation " + nation.getName() + " has no pacts.");
@@ -82,7 +83,7 @@ public class listPact {
             for (Pact pact : list) {
                 String target = pact.getTargetNation(nation.getName());
                 long exp = pact.getExpiresAt();
-                String time = (exp == -1) ? "Forever" : TimeUnit.MILLISECONDS.toDays(exp - System.currentTimeMillis()) + "d "
+                String time = (exp == -1) ? "Never" : TimeUnit.MILLISECONDS.toDays(exp - System.currentTimeMillis()) + "d "
                         + TimeUnit.MILLISECONDS.toHours(exp - System.currentTimeMillis()) % 24 + "h";
                 TownyMessaging.sendMsg(player, "&b- Pact with " + target + " | &7Expires in: " + time);
             }

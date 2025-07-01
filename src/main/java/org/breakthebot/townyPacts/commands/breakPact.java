@@ -7,6 +7,7 @@ import org.breakthebot.townyPacts.config;
 import org.breakthebot.townyPacts.object.Pact;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
+import org.breakthebot.townyPacts.utils.EventHelper;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -61,6 +62,12 @@ public class breakPact {
             return false;
         }
 
+        Pact currentPact = MetaData.getActivePact(selfNation, targetNation);
+
+        if ("BROKEN".equalsIgnoreCase(currentPact.getStatus())) {
+            TownyMessaging.sendErrorMsg(player, "This pact has already been broken.");
+            return false;
+        }
 
         config settings = TownyPacts.getInstance().getConfiguration();
         int cost = settings.breakPrice;
@@ -73,7 +80,6 @@ public class breakPact {
             selfNation.getAccount().withdraw(cost, "Breaking a pact with " + targetNationName);
         }
 
-        Pact currentPact = MetaData.getActivePact(selfNation, targetNation);
         currentPact.breakPact();
 
         MetaData.updateActivePact(selfNation, currentPact);
@@ -82,18 +88,9 @@ public class breakPact {
         TownyMessaging.sendPrefixedNationMessage(selfNation, "Pact with " + targetNationName + " has been broken by us!");
         TownyMessaging.sendPrefixedNationMessage(targetNation, "Pact with " + selfNation.getName() + " has been broken by them!");
 
-
         String message = "The pact with " + selfNation.getName() + " has been broken.";
-        List<Resident> reslist = targetNation.getResidents();
-        ArrayList<Resident> online = new ArrayList<>();
-        for (Resident res : reslist) {
-            if (res.isOnline() && (res.getPlayer().hasPermission("towny.command.nation.pact.manage") || res.getPlayer().hasPermission("towny.command.nation.pact.break"))) {
-                online.add(res);
-            }
-        }
-        if (online.isEmpty()) {
-            leaderMessageQueue.put(targetNation.getUUID(), message);
-        }
+
+        EventHelper.addLeaderMessage(targetNation, message);
 
         return true;
     }

@@ -84,6 +84,9 @@ public class acceptPact {
         }
 
         found.setAcceptedBy(player.getUniqueId());
+        found.setExpiresAt(found.getExpiresAt() == -1L
+                ? -1L
+                : found.getCreatedAt() + (found.getDuration() * 86400_000L));
 
         MetaData.removePendingPact(selfNation, targetNation);
         MetaData.removePendingPact(targetNation, selfNation);

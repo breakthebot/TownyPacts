@@ -23,9 +23,7 @@ public class Pact {
         this.nation2 = nation2;
         this.duration = duration;
         this.createdAt = System.currentTimeMillis();
-        this.expiresAt = (duration == -1)
-                ? -1L
-                : this.createdAt + (duration * 86400_000L);
+        this.expiresAt = -1L;
         this.sentBy = sentBy;
         this.acceptedBy = acceptedBy;
         this.status = "PENDING";

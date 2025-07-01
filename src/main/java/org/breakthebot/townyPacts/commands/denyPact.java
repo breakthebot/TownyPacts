@@ -5,6 +5,7 @@ import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
 import org.breakthebot.townyPacts.object.Pact;
+import org.breakthebot.townyPacts.utils.EventHelper;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -59,8 +60,12 @@ public class denyPact {
         MetaData.removePendingPact(selfNation, targetNation);
         MetaData.removePendingPact(targetNation, selfNation);
 
+        String message = "Nation " + selfNation.getName() + " has denied the pact request from " + targetNation.getName() + ".";
+
         TownyMessaging.sendPrefixedNationMessage(selfNation, "You have denied the pact from nation " + senderNationName + ".");
-        TownyMessaging.sendPrefixedNationMessage(targetNation, "The nation of " + selfNation.getName() + " has denied our Pact request.");
+        TownyMessaging.sendPrefixedNationMessage(targetNation, message);
+
+        EventHelper.addLeaderMessage(targetNation, message);
 
         return true;
     }

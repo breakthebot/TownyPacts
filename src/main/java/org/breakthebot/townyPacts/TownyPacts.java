@@ -3,9 +3,7 @@ package org.breakthebot.townyPacts;
 import com.palmergames.bukkit.towny.TownyCommandAddonAPI;
 import com.palmergames.bukkit.towny.object.AddonCommand;
 import org.breakthebot.townyPacts.commands.sendPact;
-import org.breakthebot.townyPacts.events.PvP;
-import org.breakthebot.townyPacts.events.Overclaim;
-import org.breakthebot.townyPacts.events.Update;
+import org.breakthebot.townyPacts.events.*;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.Plugin;
@@ -34,7 +32,15 @@ public final class TownyPacts extends JavaPlugin {
         event(new Overclaim(), this);
         event(new PvP(), this);
         event(new Update(), this);
+        event(new LeaderJoin(), this);
 
+        // Cleanup pacts every hour
+        getServer().getScheduler().runTaskTimerAsynchronously(
+                this,
+                new PactCleanupTask(),
+                0L,
+                20L * 60 * 60
+        );
     }
 
     @Override
