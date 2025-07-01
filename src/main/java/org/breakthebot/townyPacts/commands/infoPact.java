@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.TimeUnit;
 
 public class infoPact {
+
     public static boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull[] args) {
         if (!(sender instanceof Player player)) {
             TownyMessaging.sendErrorMsg(sender, "Only players can use this command.");
@@ -25,61 +26,106 @@ public class infoPact {
             return false;
         }
 
-        if (args.length < 2) {
-            TownyMessaging.sendErrorMsg(player, "Usage: /n pact info Pact-<Nation1>-<Nation2>");
+        if (args.length < 3) {
+            TownyMessaging.sendErrorMsg(player, "Usage: /n pact info <Nation1> <Nation2>");
             return false;
         }
 
-        String input = args[1];
-        String[] parts = input.split("-");
+        String nationName1 = args[1];
+        String nationName2 = args[2];
 
-        if (parts.length != 3 || !parts[0].equalsIgnoreCase("Pact")) {
-            TownyMessaging.sendErrorMsg(player, "Invalid pact name. Use: Pact-<Nation1>-<Nation2>");
-            return false;
-        }
-
-        String nation1 = parts[1];
-        String nation2 = parts[2];
         TownyAPI API = TownyAPI.getInstance();
-        Nation nat1 = API.getNation(nation1);
-        Nation nat2 = API.getNation(nation2);
+        Nation nat1 = API.getNation(nationName1);
+        Nation nat2 = API.getNation(nationName2);
+
         if (nat1 == null) {
-            TownyMessaging.sendErrorMsg(player, "Nation of '" + nation1 + "' not found.");
+            TownyMessaging.sendErrorMsg(player, "Nation '" + nationName1 + "' not found.");
             return false;
         }
+
         if (nat2 == null) {
-            TownyMessaging.sendErrorMsg(player, "Nation of '" + nation2 + "' not found.");
+            TownyMessaging.sendErrorMsg(player, "Nation '" + nationName2 + "' not found.");
             return false;
         }
-        boolean hasActive = MetaData.hasActivePact(nat1, nat2);
-        boolean hasPending = MetaData.hasPendingPact(nat1, nat2);
-        if (!( hasActive || hasPending)) {
-            TownyMessaging.sendErrorMsg(player, "The nations of '" + nation1 + "' & '" + nation2 + "' don't have an active or pending pact.");
+
+        boolean hasActive = MetaData.hasActivePact(nat1, nat2) || MetaData.hasActivePact(nat2, nat1);
+        boolean hasPending = MetaData.hasPendingPact(nat1, nat2) || MetaData.hasPendingPact(nat2, nat1);
+
+        if (!(hasActive || hasPending)) {
+            TownyMessaging.sendErrorMsg(player, "The nations of '" + nationName1 + "' & '" + nationName2 + "' don't have an active or pending pact.");
             return false;
         }
-        Pact pact;
+
+        // Get the pact in either direction
+        Pact pact = null;
         if (hasActive) {
             pact = MetaData.getActivePact(nat1, nat2);
-        } else {
+            if (pact == null) {
+                pact = MetaData.getActivePact(nat2, nat1);
+            }
+        } else if (hasPending) {
             pact = MetaData.getPendingPact(nat1, nat2);
+            if (pact == null) {
+                pact = MetaData.getPendingPact(nat2, nat1);
+            }
         }
-        Resident res1 = API.getResident(pact.getSentBy());
-        assert res1 != null;
-        String senderName = res1.getName();
-        Resident res2 = API.getResident(pact.getAcceptedBy());
-        assert res2 != null;
-        String acceptedByName = res2.getName();
 
+        if (pact == null) {
+            TownyMessaging.sendErrorMsg(player, "Could not retrieve pact information.");
+            return false;
+        }
+
+        Resident senderRes;
+        Resident acceptedRes = null;
+
+        try {
+            if (pact.getSentBy() == null) {
+                TownyMessaging.sendErrorMsg(player, "Pact sender information is missing.");
+                return false;
+            }
+            senderRes = API.getResident(pact.getSentBy());
+            if (senderRes == null) {
+                TownyMessaging.sendErrorMsg(player, "Could not retrieve sender signatory information.");
+                return false;
+            }
+
+            if (pact.getStatus().equalsIgnoreCase("active")) {
+                if (pact.getAcceptedBy() == null) {
+                    TownyMessaging.sendErrorMsg(player, "Pact accepted-by information is missing.");
+                    return false;
+                }
+                acceptedRes = API.getResident(pact.getAcceptedBy());
+                if (acceptedRes == null) {
+                    TownyMessaging.sendErrorMsg(player, "Could not retrieve accepted-by signatory information.");
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            TownyMessaging.sendErrorMsg(player, "Could not retrieve signatory information.");
+            return false;
+        }
+
+        String info = "\nSignatories: " + senderRes.getName();
+        if (acceptedRes != null) {
+            info += ", " + acceptedRes.getName();
+        } else if (pact.getStatus().equalsIgnoreCase("pending")) {
+            info += " (pending acceptance)";
+        }
         long exp = pact.getExpiresAt();
-        String time = (exp == -1) ? "Forever" : TimeUnit.MILLISECONDS.toDays(exp - System.currentTimeMillis()) + "d "
-                + TimeUnit.MILLISECONDS.toHours(exp - System.currentTimeMillis()) % 24 + "h";
+        info += "\nDuration: " + (exp == -1 ? "Forever" : pact.getDuration())
+                + "\nStatus: " + pact.getStatus();
 
-        String info = "\nSignatories: " + senderName + ", " + acceptedByName
-                + "\nDuration: " + pact.getDuration()
-                + "\nStatus: " + pact.getStatus()
-                + "\nExpires in: " + time;
+        if (exp == -1) {
+            info += "\nExpires in: Never";
+        } else {
+            long remainingMillis = exp - System.currentTimeMillis();
+            if (remainingMillis < 0) remainingMillis = 0;
+            String time = TimeUnit.MILLISECONDS.toDays(remainingMillis) + "d "
+                    + (TimeUnit.MILLISECONDS.toHours(remainingMillis) % 24) + "h";
+            info += "\nExpires in: " + time;
+        }
+
         TownyMessaging.sendMsg(player, "Pact information for " + pact.getName() + info);
-
         return true;
     }
 }

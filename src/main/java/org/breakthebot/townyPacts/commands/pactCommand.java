@@ -77,14 +77,39 @@ public class pactCommand implements CommandExecutor, TabCompleter {
 
         if (!(sender instanceof Player player)) return List.of();
 
+        // Handle send and break commands tab completion at second arg
         if (args.length == 2 && (args[0].equalsIgnoreCase("send") || args[0].equalsIgnoreCase("break"))) {
             return getOtherNationNames(player);
         }
 
-        if (args.length == 2 && (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("deny") || args[0].equalsIgnoreCase("info") || args[0].equalsIgnoreCase("revoke"))) {
+        // Handle accept, deny, info, revoke at second arg with pending pacts
+        if (args.length == 2 && (args[0].equalsIgnoreCase("accept") || args[0].equalsIgnoreCase("deny") || args[0].equalsIgnoreCase("revoke"))) {
             return getPendingPactNationNames(player);
         }
 
+        // Special case for info command
+        if (args[0].equalsIgnoreCase("info")) {
+            if (args.length == 2) {
+                // Suggest all nations for first nation argument
+                return TownyAPI.getInstance().getNations().stream()
+                        .map(Nation::getName)
+                        .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                        .collect(Collectors.toList());
+            } else if (args.length == 3) {
+                // Suggest all nations except the first nation (args[1])
+                String nation1 = args[1];
+                return TownyAPI.getInstance().getNations().stream()
+                        .map(Nation::getName)
+                        .filter(name -> !name.equalsIgnoreCase(nation1))
+                        .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
+                        .collect(Collectors.toList());
+            } else {
+                // No suggestions beyond second nation argument
+                return List.of();
+            }
+        }
+
+        // List command suggestions for second arg
         if (args.length == 2 && args[0].equalsIgnoreCase("list")) {
             return TownyAPI.getInstance().getNations().stream()
                     .map(Nation::getName)
