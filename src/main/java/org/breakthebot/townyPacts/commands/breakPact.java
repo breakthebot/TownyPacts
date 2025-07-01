@@ -2,6 +2,8 @@ package org.breakthebot.townyPacts.commands;
 
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
+import org.breakthebot.townyPacts.TownyPacts;
+import org.breakthebot.townyPacts.config;
 import org.breakthebot.townyPacts.object.Pact;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
@@ -59,10 +61,21 @@ public class breakPact {
             return false;
         }
 
+
+        config settings = TownyPacts.getInstance().getConfiguration();
+        int cost = settings.breakPrice;
+        if (cost != 0) {
+
+            if (selfNation.getAccount().getHoldingBalance() < cost) {
+                TownyMessaging.sendErrorMsg(player, "Your nation does not have enough to break pacts. Needed: " + cost);
+                return false;
+            }
+            selfNation.getAccount().withdraw(cost, "Breaking a pact with " + targetNationName);
+        }
+
         Pact currentPact = MetaData.getActivePact(selfNation, targetNation);
         currentPact.breakPact();
-//        long cooldown = (TownyPacts.getInstance().getConfiguration().breakCooldownDays * 3600L * 24 * 1000);
-//        currentPact.setExpiresAt(System.currentTimeMillis() + cooldown);
+
         MetaData.updateActivePact(selfNation, currentPact);
         MetaData.updateActivePact(targetNation, currentPact);
 

@@ -4,6 +4,8 @@ import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
 import com.palmergames.bukkit.towny.object.Resident;
+import org.breakthebot.townyPacts.TownyPacts;
+import org.breakthebot.townyPacts.config;
 import org.breakthebot.townyPacts.object.Pact;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -51,6 +53,7 @@ public class acceptPact {
             TownyMessaging.sendErrorMsg(player, "Nation '" + targetNationName + "' not found exist.");
             return false;
         }
+        targetNationName = targetNation.getName(); // Fix capitalisation
 
         List<Pact> pendingPacts = MetaData.getPendingPacts(targetNation);
         Pact found = null;
@@ -66,6 +69,18 @@ public class acceptPact {
         if (found == null) {
             TownyMessaging.sendErrorMsg(player, "No pending pacts from " + targetNationName);
             return false;
+        }
+
+        config settings = TownyPacts.getInstance().getConfiguration();
+        int cost = settings.baseCreationPrice;
+        if (cost != 0) {
+            cost = cost / 2;
+
+            if (selfNation.getAccount().getHoldingBalance() < cost) {
+                TownyMessaging.sendErrorMsg(player, "Your nation does not have enough to accept pacts. Needed: " + cost);
+                return false;
+            }
+            selfNation.getAccount().withdraw(cost, "Accepting a pact from " + targetNationName);
         }
 
         found.setAcceptedBy(player.getUniqueId());

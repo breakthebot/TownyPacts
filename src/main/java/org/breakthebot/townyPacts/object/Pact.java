@@ -85,8 +85,8 @@ public class Pact {
     }
 
     public void breakPact() {
-        this.expiresAt = System.currentTimeMillis() + (TownyPacts.getInstance().getConfiguration().breakCooldownDays * 3600L * 24 * 1000);
-        this.status = "BROKEN";
+        setExpiresAt(System.currentTimeMillis() + (TownyPacts.getInstance().getConfiguration().breakCooldownDays * 3600L * 24 * 1000));
+        setStatus("BROKEN");
     }
 
     @Override
