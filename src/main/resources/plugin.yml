@@ -7,6 +7,9 @@ permissions:
   towny.command.nation.pact.list:
     description: Allow a player to list pacts of a nation
     default: true
+  towny.command.nation.pact.info:
+    description: Allow a player to view a pact's information
+    default: true
   towny.command.nation.pact.send:
     description: Allow a player to send a pact request
     default: op
@@ -18,6 +21,9 @@ permissions:
     default: op
   towny.command.nation.pact.deny:
     description: Allow a player to deny a pact
+    default: op
+  towny.command.nation.pact.revoke:
+    description: Allow a player to revoke a sent pact
     default: op
   towny.command.nation.pact.manage:
     description: Allow a player to send, accept, break, and deny pacts
