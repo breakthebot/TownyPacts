@@ -1,7 +1,6 @@
-package org.breakthebot.townyPacts.pact;
+package org.breakthebot.townyPacts.object;
 
 import org.breakthebot.townyPacts.TownyPacts;
-
 import java.util.UUID;
 
 public class Pact {
@@ -42,11 +41,17 @@ public class Pact {
 
     public String getNation2() { return nation2; }
 
+    public void setNation1(String newName) { this.nation1 = newName; }
+
+    public void setNation2(String newName) { this.nation2 = newName; }
+
     public int getDuration() { return duration; }
 
     public long getCreatedAt() { return createdAt; }
 
     public long getExpiresAt() { return expiresAt; }
+
+    public void setExpiresAt(long expiry) { this.expiresAt = expiry; }
 
     public UUID getSentBy() { return sentBy; }
 
@@ -75,8 +80,8 @@ public class Pact {
         return null;
     }
 
-    public void breakPact(String ownNation, String targetNation) {
-        this.expiresAt = System.currentTimeMillis() + (TownyPacts.getInstance().getConfiguration().breakCooldownHours * 3600L * 1000);
+    public void breakPact() {
+        this.expiresAt = System.currentTimeMillis() + (TownyPacts.getInstance().getConfiguration().breakCooldownDays * 3600L * 24 * 1000);
         this.status = "BROKEN";
     }
 

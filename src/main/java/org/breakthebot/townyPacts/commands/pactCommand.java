@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.object.Nation;
 import org.breakthebot.townyPacts.utils.MetaData;
-import org.breakthebot.townyPacts.pact.Pact;
+import org.breakthebot.townyPacts.object.Pact;
 
 
 import java.util.*;
@@ -31,22 +31,31 @@ public class pactCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            TownyMessaging.sendErrorMsg(sender, "Usage: /n pact <send|list|break|cancel>");
+            TownyMessaging.sendErrorMsg(sender, "Usage: /n pact <send|list|break|accept|deny>");
             return false;
         }
 
-        return switch (args[0].toLowerCase()) {
-            case "send" -> sendPact.onCommand(sender, command, label, args);
-            case "list" -> listPact.onCommand(sender, command, label, args);
-            case "break" -> breakPact.onCommand(sender, command, label, args);
-            case "cancel" -> cancelPact.onCommand(sender, command, label, args);
-            case "accept" -> acceptPact.onCommand(sender, command, label, args);
-            case "deny" -> denyPact.onCommand(sender, command, label, args);
-            default -> {
-                TownyMessaging.sendErrorMsg(player, "Invalid argument. Choose: send, list, break, accept, deny or cancel.");
-                yield false;
+        switch (args[0].toLowerCase()) {
+            case "send" -> {
+                return sendPact.onCommand(sender, command, label, args);
             }
-        };
+            case "list" -> {
+                return listPact.onCommand(sender, command, label, args);
+            }
+            case "break" -> {
+                return breakPact.onCommand(sender, command, label, args);
+            }
+            case "accept" -> {
+                return acceptPact.onCommand(sender, command, label, args);
+            }
+            case "deny" -> {
+                return denyPact.onCommand(sender, command, label, args);
+            }
+            default -> {
+                TownyMessaging.sendErrorMsg(player, "Usage: /n pact <send|list|break|accept|deny>");
+                return false;
+            }
+        }
     }
 
     @Override
@@ -57,12 +66,12 @@ public class pactCommand implements CommandExecutor, TabCompleter {
             @NotNull String[] args
     ) {
         if (args.length == 1) {
-            return List.of("send", "list", "break", "cancel", "accept", "deny");
+            return List.of("send", "list", "break", "accept", "deny");
         }
 
         if (!(sender instanceof Player player)) return List.of();
 
-        if (args.length == 2 && (args[0].equalsIgnoreCase("send") || args[0].equalsIgnoreCase("break") || args[0].equalsIgnoreCase("cancel"))) {
+        if (args.length == 2 && (args[0].equalsIgnoreCase("send") || args[0].equalsIgnoreCase("break"))) {
             return getOtherNationNames(player);
         }
 
