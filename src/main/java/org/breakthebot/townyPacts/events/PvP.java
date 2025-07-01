@@ -30,16 +30,10 @@ public class PvP implements Listener {
         }
 
         if (attacker == null) return;
-
         TownyAPI API = TownyAPI.getInstance();
         Nation nat1 = API.getNation(victim);
         Nation nat2 = API.getNation(attacker);
-
-        if (nat1 == null || nat2 == null) return;
-
-        if (API.isPVP(victim.getLocation())) {
-            return;
-        }
+        if (nat1 == null || nat2 == null) { return; }
 
         TownBlock block = API.getTownBlock(victim.getLocation());
         if (block == null) { return; }
