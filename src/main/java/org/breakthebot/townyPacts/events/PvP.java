@@ -3,6 +3,7 @@ package org.breakthebot.townyPacts.events;
 import com.palmergames.bukkit.towny.TownyAPI;
 import com.palmergames.bukkit.towny.TownyMessaging;
 import com.palmergames.bukkit.towny.object.Nation;
+import com.palmergames.bukkit.towny.object.TownBlock;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -33,6 +34,10 @@ public class PvP implements Listener {
         Nation nat1 = API.getNation(victim);
         Nation nat2 = API.getNation(attacker);
         if (nat1 == null || nat2 == null) { return; }
+
+        TownBlock block = API.getTownBlock(victim.getLocation());
+        if (block == null) { return; }
+        if (block.getType().getName().equalsIgnoreCase("arena")) { return; }
 
         if (MetaData.hasActivePact(nat1, nat2)) {
             event.setCancelled(true);

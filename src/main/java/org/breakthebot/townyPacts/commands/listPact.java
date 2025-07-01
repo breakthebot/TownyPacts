@@ -47,6 +47,7 @@ public class listPact {
 
 
         List<Pact> pacts = MetaData.getActivePacts(nation);
+        pacts.addAll(MetaData.getPendingPacts(nation));
 
         if (pacts.isEmpty()) {
             TownyMessaging.sendMsg(player, "Nation " + nation.getName() + " has no pacts.");
