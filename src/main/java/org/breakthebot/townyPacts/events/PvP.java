@@ -36,8 +36,8 @@ public class PvP implements Listener {
         if (nat1 == null || nat2 == null) { return; }
 
         TownBlock block = API.getTownBlock(victim.getLocation());
-        if (block == null) { return; }
-        if (block.getType().getName().equalsIgnoreCase("arena")) { return; }
+        if (block != null && block.getType().getName().equalsIgnoreCase("arena")) { return; }
+
 
         if (MetaData.hasActivePact(nat1, nat2)) {
             event.setCancelled(true);
