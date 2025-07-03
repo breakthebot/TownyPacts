@@ -54,14 +54,6 @@ public class listPact {
             return true;
         }
 
-//        TownyMessaging.sendMsg(player, "Pacts for nation " + nation.getName() + ":");
-//        for (Pact pact : pacts) {
-//            String targetNation = pact.getTargetNation(nation.getName());
-//            String durationStr = pact.getDuration() == -1 ? "Forever" : pact.getDuration() + " days";
-//            String status = pact.getStatus();
-//
-//            TownyMessaging.sendMsg(player, "- Pact with " + targetNation + " | Duration: " + durationStr + " | Status: " + status);
-//        }
         List<Pact> active = new ArrayList<>(), pending = new ArrayList<>(), broken = new ArrayList<>();
         for (Pact pact : pacts) {
             switch (pact.getStatus().toUpperCase()) {
