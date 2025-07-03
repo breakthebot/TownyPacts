@@ -57,13 +57,13 @@ public class infoPact {
         }
 
         // Get the pact in either direction
-        Pact pact = null;
+        Pact pact;
         if (hasActive) {
             pact = MetaData.getActivePact(nat1, nat2);
             if (pact == null) {
                 pact = MetaData.getActivePact(nat2, nat1);
             }
-        } else if (hasPending) {
+        } else {
             pact = MetaData.getPendingPact(nat1, nat2);
             if (pact == null) {
                 pact = MetaData.getPendingPact(nat2, nat1);
@@ -76,7 +76,7 @@ public class infoPact {
         }
 
         Resident senderRes;
-        Resident acceptedRes = null;
+        Resident acceptedRes = API.getResident(pact.getAcceptedBy());
 
         try {
             if (pact.getSentBy() == null) {
@@ -94,38 +94,40 @@ public class infoPact {
                     TownyMessaging.sendErrorMsg(player, "Pact accepted-by information is missing.");
                     return false;
                 }
-                acceptedRes = API.getResident(pact.getAcceptedBy());
-                if (acceptedRes == null) {
-                    TownyMessaging.sendErrorMsg(player, "Could not retrieve accepted-by signatory information.");
-                    return false;
-                }
             }
         } catch (Exception e) {
-            TownyMessaging.sendErrorMsg(player, "Could not retrieve signatory information.");
+            TownyMessaging.sendErrorMsg(player, "Could not retrieve pact information.");
             return false;
         }
 
-        String info = "\nSignatories: " + senderRes.getName();
+        String info = "\n&bSignatories: &3" + senderRes.getName();
         if (acceptedRes != null) {
             info += ", " + acceptedRes.getName();
         } else if (pact.getStatus().equalsIgnoreCase("pending")) {
-            info += " (pending acceptance)";
+            info += " &7(pending acceptance)";
         }
         long exp = pact.getExpiresAt();
-        info += "\nDuration: " + (exp == -1 ? "Forever" : pact.getDuration())
-                + "\nStatus: " + pact.getStatus();
+        String status = pact.getStatus();
+        if (status.equalsIgnoreCase("pending")) {
+            status = "&7" + status;
+        } else if (status.equalsIgnoreCase("broken")) {
+            status = "&4" + status;
+        }
+
+        info += "\n&bDuration: &7" + (exp == -1 ? "&6Forever" : pact.getDuration())
+                + "\n&bStatus: " + status;
 
         if (exp == -1) {
-            info += "\nExpires in: Never";
+            info += "\n&bExpires: &6Never";
         } else {
             long remainingMillis = exp - System.currentTimeMillis();
             if (remainingMillis < 0) remainingMillis = 0;
             String time = TimeUnit.MILLISECONDS.toDays(remainingMillis) + "d "
                     + (TimeUnit.MILLISECONDS.toHours(remainingMillis) % 24) + "h";
-            info += "\nExpires in: " + time;
+            info += "\n&bExpires: &7in " + time;
         }
 
-        TownyMessaging.sendMsg(player, "Pact information for " + pact.getName() + info);
+        TownyMessaging.sendMsg(player, "&bPact information: \n&bName: &7" + pact.getName() + info);
         return true;
     }
 }
