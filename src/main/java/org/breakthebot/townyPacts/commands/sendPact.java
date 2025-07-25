@@ -90,6 +90,11 @@ public class sendPact implements Listener {
             }
 
             config settings = TownyPacts.getInstance().getConfiguration();
+
+            if (settings.pactRequireAlly && !senderNation.hasAlly(targetNation)) {
+                TownyMessaging.sendErrorMsg(player, "You must be allied to send a pact!");
+                return false;
+            }
             int cost = settings.baseCreationPrice;
             if (cost != 0) {
                 cost = (cost + 1) / 2;
@@ -115,7 +120,7 @@ public class sendPact implements Listener {
 
             TownyMessaging.sendMsg(player, "Pact sent to nation " + targetNationName + " for duration " + durationStr + ".");
 
-            String message = "You have received a pact request from nation " + senderNation.getName() + " for duration " + durationStr + ".\n" + "Use \"/n pact accept|deny " + senderNation.getName() + "\"";
+            String message = "&bYou have received a pact request from nation " + senderNation.getName() + " for duration " + durationStr + ".\n&7Use /n pact accept|deny " + senderNation.getName();
 
             EventHelper.addLeaderMessage(targetNation, message);
             return true;

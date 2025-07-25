@@ -33,7 +33,7 @@ public final class TownyPacts extends JavaPlugin {
         event(new PvP(), this);
         event(new Update(), this);
         event(new LeaderJoin(), this);
-        event(new NationEnemy(), this);
+        event(new NationRelationListener(), this);
 
         // Cleanup pacts every hour
         getServer().getScheduler().runTaskTimerAsynchronously(

@@ -18,11 +18,13 @@
 package org.breakthebot.townyPacts.events;
 
 import com.palmergames.bukkit.towny.event.NationPreAddEnemyEvent;
+import com.palmergames.bukkit.towny.event.NationRemoveAllyEvent;
+import org.breakthebot.townyPacts.TownyPacts;
 import org.breakthebot.townyPacts.utils.MetaData;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-public class NationEnemy implements Listener {
+public class NationRelationListener implements Listener {
 
     @EventHandler
     public void onNationEnemy(NationPreAddEnemyEvent event) {
@@ -30,6 +32,15 @@ public class NationEnemy implements Listener {
         if (hasPact) {
             event.setCancelled(true);
             event.setCancelMessage("You cannot enemy the nation of " + event.getEnemyName() + " as you have an active pact.");
+        }
+    }
+
+    @EventHandler
+    public void onNationUnAlly(NationRemoveAllyEvent event) {
+        boolean required = TownyPacts.getInstance().getConfiguration().pactRequireAlly;
+        if (required && MetaData.hasActivePact(event.getNation(), event.getRemovedNation())) {
+            event.setCancelled(true);
+            event.setCancelMessage("You cannot unally a nation you have an active pact with!");
         }
     }
 }

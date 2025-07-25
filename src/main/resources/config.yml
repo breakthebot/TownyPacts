@@ -1,3 +1,4 @@
 baseCreationPrice: 0
 breakPrice: 0
 breakCooldownDays: 3
+pactRequireAlly: true

@@ -70,8 +70,13 @@ public class acceptPact {
             TownyMessaging.sendErrorMsg(player, "No pending pacts from " + targetNationName);
             return false;
         }
-
         config settings = TownyPacts.getInstance().getConfiguration();
+
+        if (settings.pactRequireAlly && !selfNation.hasAlly(targetNation)) {
+            TownyMessaging.sendErrorMsg(player, "You must be allied to accept a pact!");
+            return false;
+        }
+
         int cost = settings.baseCreationPrice;
         if (cost != 0) {
             cost = cost / 2;
